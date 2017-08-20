@@ -9,7 +9,8 @@ import com.ulfric.andrew.argument.Argument;
 import com.ulfric.commons.naming.Name;
 import com.ulfric.factions.Entity;
 import com.ulfric.factions.Universe;
-import com.ulfric.factions.query.EntityQueries;
+import com.ulfric.factions.mutate.FactionMutations;
+import com.ulfric.factions.query.DenizenQueries;
 import com.ulfric.factions.text.RandomNameGenerator;
 import com.ulfric.i18n.content.Details;
 
@@ -17,34 +18,63 @@ import java.util.Optional;
 
 @Name("create")
 @Alias({"new", "make"})
-public class FactionsCreateCommand extends FactionsCommand { // TODO prevent bad words, attempt name normalization before failing
+public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edwards 8/20/17: prevent bad words, attempt name normalization before failing
 
 	@Argument
-	protected String name;
+	protected String name; // TODO Adam Edwards 8/20/17: dedicated 'Name' type?
 
 	@Override
 	public void run(Context context) {
+		generateRandomNameIfNeeded();
+
 		Sender sender = context.getSender();
-
-		if (name.equals("?")) {
-			name = RandomNameGenerator.createName();
+		if (nameIsValid()) {
+			createFromSource(sender);
+		} else {
+			invalidName(sender);
 		}
+	}
 
-		if (StringUtils.isAlpha(name)) {
-			Universe factions = Universe.get();
-			Optional<Entity> creation = factions.createFaction(name);
-			if (creation.isPresent()) {
-				Entity created = creation.get();
-				String name = created.query(EntityQueries.name());
-				sender.sendMessage("factions-created", Details.of("factionName", name));
-			} else if (factions.getFactionByName(name) != null) {
-				sender.sendMessage("factions-create-failure-taken", Details.of("factionName", name));
-			} else {
-				sender.sendMessage("factions-create-failure", Details.of("factionName", name));
-			}
+	private void generateRandomNameIfNeeded() {
+		if (name.equals("?")) {
+			name = RandomNameGenerator.createName(); // TODO Adam Edwards 8/20/17: (currently harmless) ensure name is available
+		}
+	}
+
+	private boolean nameIsValid() {
+		return StringUtils.isAlpha(name);
+	}
+
+	private void createFromSource(Sender sender) {
+		Universe factions = Universe.get();
+
+		Entity creator = factions.getDenizen(sender.getUniqueId());
+		Entity currentFaction = creator.query(DenizenQueries.faction());
+		if (currentFaction != null) {
+			sender.sendMessage("factions-create-already-in-faction", details(currentFaction));
 			return;
 		}
 
+		Optional<Entity> creation = factions.createFaction(name);
+		if (creation.isPresent()) {
+			Entity created = creation.get();
+			created.mutate(FactionMutations.owner(creator));
+			sender.sendMessage("factions-created", details(created));
+		} else {
+			Entity existing = factions.getFactionByName(name);
+			 if (existing != null) { // TODO Adam Edwards 8/20/17: better 'faction exists' handling to prevent (harmless, next to impossibly rare) missed failure cause
+				sender.sendMessage("factions-create-name-taken", details(existing));
+			} else {
+				sender.sendMessage("factions-create-generic-failure", Details.of("attemptedName", name));
+			}
+		}
+	}
+
+	private Details details(Entity faction) {
+		return Details.of("faction", faction);
+	}
+
+	private void invalidName(Sender sender) {
 		if (StringUtils.isAsciiPrintable(name)) {
 			sender.sendMessage("factions-create-must-be-alphabetical");
 		} else {
