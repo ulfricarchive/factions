@@ -1,5 +1,5 @@
-name: Manifest
-main: com.ulfric.manifest.Manifest
+name: Factions
+main: com.ulfric.factions.Factions
 version: 1.0.0
 author: Ulfric Projects
 load: STARTUP
