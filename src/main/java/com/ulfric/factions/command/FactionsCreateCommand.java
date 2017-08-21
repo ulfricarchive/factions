@@ -59,7 +59,7 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 		if (creation.isPresent()) {
 			Entity created = creation.get();
 			created.mutate(FactionMutations.owner(creator));
-			sender.sendMessage("factions-created", details(created));
+			sender.sendMessage("factions-create", details(created));
 		} else {
 			Entity existing = factions.getFactionByName(name);
 			 if (existing != null) { // TODO Adam Edwards 8/20/17: better 'faction exists' handling to prevent (harmless, next to impossibly rare) missed failure cause

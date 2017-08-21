@@ -8,6 +8,7 @@ import com.ulfric.commons.naming.Name;
 import com.ulfric.commons.text.StringHelper;
 import com.ulfric.factions.Entity;
 import com.ulfric.factions.Universe;
+import com.ulfric.factions.query.DenizenQueries;
 import com.ulfric.i18n.content.Details;
 
 import java.util.List;
@@ -32,6 +33,14 @@ public class FactionsShowCommand extends FactionsCommand {
 					sender.sendMessage("factions-show-not-in-faction-and-no-faction-specified");
 					return;
 				}
+
+				Entity lookupDenizen = lookup;
+				lookup = lookup.query(DenizenQueries.faction());
+				if (lookup == null) {
+					lookup = lookupDenizen;
+					showDenizen(sender);
+					return;
+				}
 			} else {
 				String given = StringHelper.joinWithOxfordComma(arguments, "or"); // TODO localize 'or'
 				Details details = Details.of("given", given);
@@ -40,9 +49,19 @@ public class FactionsShowCommand extends FactionsCommand {
 			}
 		}
 
-		
+		showFaction(sender);
+	}
 
-		// TODO
+	private void showDenizen(Sender sender) {
+		sender.sendMessage("factions-show-faction", details("denizen"));
+	}
+
+	private void showFaction(Sender sender) {
+		sender.sendMessage("factions-show-faction", details("faction"));
+	}
+
+	private Details details(String name) {
+		return Details.of(name, lookup);
 	}
 
 }
