@@ -2,17 +2,19 @@ package com.ulfric.factions.command;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.ulfric.andrew.Sender;
 import com.ulfric.andrew.argument.ResolutionRequest;
 import com.ulfric.andrew.argument.Resolver;
+import com.ulfric.commons.spigot.command.CommandSenderHelper;
 import com.ulfric.commons.spigot.player.PlayerHelper;
 import com.ulfric.commons.value.UniqueIdHelper;
 import com.ulfric.dragoon.extension.inject.Inject;
 import com.ulfric.factions.Entity;
 import com.ulfric.factions.Universe;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class EntityResolver extends Resolver<Entity> {
@@ -52,19 +54,19 @@ public class EntityResolver extends Resolver<Entity> {
 			}
 
 			else if (PlayerHelper.isAskingForSelf(argument)) {
-				return universe.getDenizen(request.getContext().getSender().getUniqueId());
+				return universe.getDenizen(CommandSenderHelper.getUniqueId(request.getContext().getSender()));
 			}
 		}
 
 		return entity;
 	}
 
-	private Entity getRandomDenizenOtherThan(Sender sender) {
-		UUID senderId = sender.getUniqueId();
+	private Entity getRandomDenizenOtherThan(CommandSender sender) {
+		UUID senderId = CommandSenderHelper.getUniqueId(sender);
 		for (int x = 0; x < 4; x++) { // TODO make '4' configurable
 			Player randomPlayer = PlayerHelper.getRandomPlayer();
 
-			if (randomPlayer == null || randomPlayer.getUniqueId().equals(senderId)) {
+			if (randomPlayer == null || Objects.equals(randomPlayer.getUniqueId(), senderId)) {
 				continue;
 			}
 

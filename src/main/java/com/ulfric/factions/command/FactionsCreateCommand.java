@@ -1,18 +1,21 @@
 package com.ulfric.factions.command;
 
+import org.bukkit.command.CommandSender;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.ulfric.andrew.Alias;
 import com.ulfric.andrew.Context;
-import com.ulfric.andrew.Sender;
 import com.ulfric.andrew.argument.Argument;
 import com.ulfric.commons.naming.Name;
+import com.ulfric.commons.spigot.command.CommandSenderHelper;
 import com.ulfric.factions.Entity;
 import com.ulfric.factions.Universe;
 import com.ulfric.factions.mutate.FactionMutations;
 import com.ulfric.factions.query.DenizenQueries;
 import com.ulfric.factions.text.RandomNameGenerator;
 import com.ulfric.i18n.content.Details;
+import com.ulfric.servix.services.locale.TellService;
 
 import java.util.Optional;
 
@@ -27,7 +30,7 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 	public void run(Context context) {
 		generateRandomNameIfNeeded();
 
-		Sender sender = context.getSender();
+		CommandSender sender = context.getSender();
 		if (nameIsValid()) {
 			createFromSource(sender);
 		} else {
@@ -45,13 +48,13 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 		return StringUtils.isAlpha(name);
 	}
 
-	private void createFromSource(Sender sender) {
+	private void createFromSource(CommandSender sender) {
 		Universe factions = Universe.get();
 
-		Entity creator = factions.getDenizen(sender.getUniqueId());
+		Entity creator = factions.getDenizen(CommandSenderHelper.getUniqueId(sender));
 		Entity currentFaction = creator.query(DenizenQueries.faction());
 		if (currentFaction != null) {
-			sender.sendMessage("factions-create-already-in-faction", details(currentFaction));
+			TellService.sendMessage(sender, "factions-create-already-in-faction", details(currentFaction));
 			return;
 		}
 
@@ -59,13 +62,13 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 		if (creation.isPresent()) {
 			Entity created = creation.get();
 			created.mutate(FactionMutations.owner(creator));
-			sender.sendMessage("factions-create", details(created));
+			TellService.sendMessage(sender, "factions-create", details(created));
 		} else {
 			Entity existing = factions.getFactionByName(name);
 			 if (existing != null) { // TODO Adam Edwards 8/20/17: better 'faction exists' handling to prevent (harmless, next to impossibly rare) missed failure cause
-				sender.sendMessage("factions-create-name-taken", details(existing));
+				 TellService.sendMessage(sender, "factions-create-name-taken", details(existing));
 			} else {
-				sender.sendMessage("factions-create-generic-failure", Details.of("attemptedName", name));
+				TellService.sendMessage(sender, "factions-create-generic-failure", Details.of("attemptedName", name));
 			}
 		}
 	}
@@ -74,7 +77,7 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 		return Details.of("faction", faction);
 	}
 
-	private void invalidName(Sender sender) {
+	private void invalidName(CommandSender sender) {
 		if (StringUtils.isAsciiPrintable(name)) {
 			sender.sendMessage("factions-create-must-be-alphabetical");
 		} else {

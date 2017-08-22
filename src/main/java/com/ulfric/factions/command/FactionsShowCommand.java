@@ -1,15 +1,18 @@
 package com.ulfric.factions.command;
 
+import org.bukkit.command.CommandSender;
+
 import com.ulfric.andrew.Alias;
 import com.ulfric.andrew.Context;
-import com.ulfric.andrew.Sender;
 import com.ulfric.andrew.argument.Argument;
 import com.ulfric.commons.naming.Name;
+import com.ulfric.commons.spigot.command.CommandSenderHelper;
 import com.ulfric.commons.text.StringHelper;
 import com.ulfric.factions.Entity;
 import com.ulfric.factions.Universe;
 import com.ulfric.factions.query.DenizenQueries;
 import com.ulfric.i18n.content.Details;
+import com.ulfric.servix.services.locale.TellService;
 
 import java.util.List;
 
@@ -22,12 +25,12 @@ public class FactionsShowCommand extends FactionsCommand {
 
 	@Override
 	public void run(Context context) {
-		Sender sender = context.getSender();
+		CommandSender sender = context.getSender();
 
 		if (lookup == null) {
 			List<String> arguments = context.getArguments().get(FactionsShowCommand.class);
 			if (arguments.isEmpty()) {
-				lookup = Universe.get().getDenizen(sender.getUniqueId());
+				lookup = Universe.get().getDenizen(CommandSenderHelper.getUniqueId(sender));
 
 				if (lookup == null) {
 					sender.sendMessage("factions-show-not-in-faction-and-no-faction-specified");
@@ -44,7 +47,7 @@ public class FactionsShowCommand extends FactionsCommand {
 			} else {
 				String given = StringHelper.joinWithOxfordComma(arguments, "or"); // TODO localize 'or'
 				Details details = Details.of("given", given);
-				sender.sendMessage("factions-show-not-in-faction-and-given-factions-not-found", details);
+				TellService.sendMessage(sender, "factions-show-not-in-faction-and-given-factions-not-found", details);
 				return;
 			}
 		}
@@ -52,12 +55,12 @@ public class FactionsShowCommand extends FactionsCommand {
 		showFaction(sender);
 	}
 
-	private void showDenizen(Sender sender) {
-		sender.sendMessage("factions-show-faction", details("denizen"));
+	private void showDenizen(CommandSender sender) {
+		TellService.sendMessage(sender, "factions-show-faction", details("denizen"));
 	}
 
-	private void showFaction(Sender sender) {
-		sender.sendMessage("factions-show-faction", details("faction"));
+	private void showFaction(CommandSender sender) {
+		TellService.sendMessage(sender, "factions-show-faction", details("faction"));
 	}
 
 	private Details details(String name) {
