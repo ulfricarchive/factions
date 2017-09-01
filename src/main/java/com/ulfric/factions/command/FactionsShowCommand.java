@@ -2,7 +2,10 @@ package com.ulfric.factions.command;
 
 import org.bukkit.command.CommandSender;
 
+import org.apache.commons.collections4.MapUtils;
+
 import com.ulfric.andrew.Alias;
+import com.ulfric.andrew.Command;
 import com.ulfric.andrew.Context;
 import com.ulfric.andrew.argument.Argument;
 import com.ulfric.commons.naming.Name;
@@ -14,7 +17,9 @@ import com.ulfric.factions.query.DenizenQueries;
 import com.ulfric.i18n.content.Details;
 import com.ulfric.servix.services.locale.TellService;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Name("show")
 @Alias({"this", "who", "me", "information", "info"}) // TODO should 'this' show the faction where the player is standing instead?
@@ -28,7 +33,7 @@ public class FactionsShowCommand extends FactionsCommand {
 		CommandSender sender = context.getSender();
 
 		if (lookup == null) {
-			List<String> arguments = context.getArguments().get(FactionsShowCommand.class);
+			List<String> arguments = getShowArguments(context);
 			if (arguments.isEmpty()) {
 				lookup = Universe.get().getDenizen(CommandSenderHelper.getUniqueId(sender));
 
@@ -53,6 +58,15 @@ public class FactionsShowCommand extends FactionsCommand {
 		}
 
 		showFaction(sender);
+	}
+
+	private List<String> getShowArguments(Context context) {
+		Map<Class<? extends Command>, List<String>> arguments = context.getArguments().getArguments();
+		if (MapUtils.isEmpty(arguments)) {
+			return Collections.emptyList();
+		}
+		List<String> argumentsList = arguments.get(FactionsShowCommand.class);
+		return argumentsList == null ? Collections.emptyList() : argumentsList;
 	}
 
 	private void showDenizen(CommandSender sender) {
