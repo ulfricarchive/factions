@@ -10,19 +10,17 @@ import com.ulfric.andrew.Context;
 import com.ulfric.andrew.argument.Argument;
 import com.ulfric.commons.naming.Name;
 import com.ulfric.commons.spigot.command.CommandSenderHelper;
-import com.ulfric.commons.text.Patterns;
 import com.ulfric.factions.Entity;
 import com.ulfric.factions.Universe;
 import com.ulfric.factions.mutate.FactionMutations;
 import com.ulfric.factions.query.DenizenQueries;
 import com.ulfric.factions.text.RandomNameGenerator;
-import com.ulfric.fancymessage.Message;
 import com.ulfric.i18n.content.Details;
-import com.ulfric.servix.services.locale.LocaleService;
+import com.ulfric.servix.services.locale.InputService;
+import com.ulfric.servix.services.locale.RunCommandCallback;
 import com.ulfric.servix.services.locale.TellService;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
 @Name("create")
 @Alias({"new", "make"})
@@ -35,7 +33,7 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 	public void run(Context context) {
 		CommandSender sender = context.getSender();
 		if (name == null) {
-			requestNameOnSign(sender);
+			requestName(sender);
 
 			return;
 		}
@@ -49,20 +47,15 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 		}
 	}
 
-	private void requestNameOnSign(CommandSender sender) {
+	private void requestName(CommandSender sender) {
 		if (sender instanceof Player) {
 			requestNameOnSign((Player) sender);
-		}
+		} // TODO else
 	}
 
 	private void requestNameOnSign(Player player) {
-		String message = Message.toLegacy(LocaleService.getMessage(player, "factions-create-sign-give-name"));
-		String[] messageLines = Patterns.NEW_LINE.split(message);
-		String[] lines = new String[messageLines.length + 1];
-		for (int x = 1; x < lines.length; x++) {
-			lines[x] = messageLines[x - 1];
-		}
-		player.sendSign(lines, new CreateSignCallback(player));
+		InputService.requestOnSign(player, "factions-create-sign-give-name",
+				new RunCommandCallback(player, "/f create"));
 	}
 
 	private void generateRandomNameIfNeeded() {
@@ -109,27 +102,6 @@ public class FactionsCreateCommand extends FactionsCommand { // TODO Adam Edward
 			sender.sendMessage("factions-create-must-be-alphabetical");
 		} else {
 			sender.sendMessage("factions-create-must-be-alphabetical-other-country");
-		}
-	}
-
-	private static final class CreateSignCallback implements Consumer<String[]> {
-		private final Player player;
-
-		CreateSignCallback(Player player) {
-			this.player = player;
-		}
-
-		@Override
-		public void accept(String[] lines) {
-			if (lines.length == 0) {
-				return;
-			}
-
-			String name = lines[0];
-			if (StringUtils.isBlank(name)) {
-				return;
-			}
-			player.performCommand("/f create " + name.trim()); // TODO better way to execute commands
 		}
 	}
 
